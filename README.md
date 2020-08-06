@@ -21,6 +21,14 @@ Ey is small (not much more than 100 lines of code), and has no external
 dependencies, meaning that you can even copy the implementation into your own
 code repos if you want to ensure maximum future reproducibility.
 
+## 'Ey' what?
+
+For anyeone left confused by the name, 'Ey' is [urban slang](https://www.urbandictionary.com/define.php?term=ey)
+meaning things like "Hey", "Hi", "Oh" or even "Hey, let's".
+It reflects how relaxed you can be while using this library, as it is so simple
+that to execute a shell command, you can just go: "Ey, shell ... yada yada", or
+more precisely: `ey.shell('yada yada...')` :)
+
 ## Prerequisites
 
 - Ey is so far only tested on unix-like environments.
