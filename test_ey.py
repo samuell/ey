@@ -4,25 +4,33 @@ from pytest import fail
 
 def test_replace_ports():
     task = ey.ShellTask('', inputs={'gz': 'chrmt.fa.gz'})
-    for input, expected in [
+    for cmdpattern, expected_cmd, expected_temp_cmd in [
             (
                 'wget -O [o:fasta:chrmt.fa]',
-                'wget -O chrmt.fa'
+                'wget -O chrmt.fa',
+                'wget -O chrmt.fa.tmp'
             ),
             (
                 'wget -O [o:fasta:[i:gz]]',
-                'wget -O chrmt.fa.gz'
+                'wget -O chrmt.fa.gz',
+                'wget -O chrmt.fa.gz.tmp'
             ),
             (
                 'zcat [i:gz] > [o:fasta:[i:gz|%.gz]]',
-                'zcat chrmt.fa.gz > chrmt.fa'
+                'zcat chrmt.fa.gz > chrmt.fa',
+                'zcat chrmt.fa.gz > chrmt.fa.tmp'
             )
         ]:
-        output = task._replace_ports(input)
-        if output != expected:
-            fail('Expected "{expected}", but got "{actual}"'.format(
-                expected=expected,
-                actual=output
+        cmd, temp_cmd = task._replace_ports(cmdpattern)
+        if cmd != expected_cmd:
+            fail('Expected command: "{expected}", but got "{actual}"'.format(
+                expected=expected_cmd,
+                actual=cmd
+            ))
+        if temp_cmd != expected_temp_cmd:
+            fail('Expected temp command: "{expected}", but got "{actual}"'.format(
+                expected=expected_temp_cmd,
+                actual=temp_cmd
             ))
 
 def test_ey():

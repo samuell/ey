@@ -1,6 +1,7 @@
 import subprocess as sp
 import re
 import os
+import shutil
 
 def shell(command, inputs={}):
     task = ShellTask(command, inputs)
@@ -16,10 +17,9 @@ class ShellTask(Task):
     def __init__(self, command, inputs={}):
         self.inputs = {}
         self.outputs = {}
-        self.command = command
         for name, path in inputs.items():
             self.inputs[name] = path
-        self.command = self._replace_ports(command)
+        self.command, self.temp_command = self._replace_ports(command)
 
     # ------------------------------------------------
     # Public methods
@@ -34,7 +34,12 @@ class ShellTask(Task):
                 return
 
         print('Executing command: %s' % self.command)
-        out = sp.run(self.command, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, check=True, shell=True)
+        out = sp.run(self.temp_command, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, check=True, shell=True)
+
+        # Move paths from temp to final paths
+        for _, path in self.outputs.items():
+            shutil.move('%s.tmp' % path, path)
+
         self._add_cmd_results(out)
 
     # ------------------------------------------------
@@ -61,13 +66,17 @@ class ShellTask(Task):
             command = command.replace(placeholder, path)
 
         # Out-ports
+        temp_command = command
         ms = re.findall(r'(\[o\:([^:\]]*):([^:\]]+)\])', command, flags=re.S)
         for m in ms:
             placeholder = m[0]
             portname = m[1]
-            pathpattern = m[2]
+            path = m[2]
+            self.outputs[portname] = path
 
-            self.outputs[portname] = pathpattern
-            command = command.replace(placeholder, pathpattern)
+            temppath = '%s.tmp' % path
 
-        return command
+            command = command.replace(placeholder, path)
+            temp_command = temp_command.replace(placeholder, temppath)
+
+        return command, temp_command
