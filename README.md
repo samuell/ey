@@ -5,7 +5,20 @@
 
 A super-simple library for performing stepwise batch tasks that saves things to
 files, such that outputs from already finished tasks are not needlessly
-re-computed.
+re-computed. See the [below](#example) for an example.
+
+Ey does not have a scheduler or central worker pool or anything like that. Instead
+you simply execute your tasks manually in a procedural way. This way task executions
+can easily be mixed with other procedural python code.
+
+Ey can work as an alternative to full-blown workflow frameworks like Luigi or
+Airflow for cases when you just have a single python script, where you want to
+do a few batch steps before starting your interactive analysis, such as
+downloading datasets, unpacking them, preprocessing et cetera.
+
+Ey is small (not much more than 100 lines of code), and has no external
+dependencies, meaning that you can even copy the implementation into your own
+code repos if you want to ensure maximum future reproducibility.
 
 ## Prerequisites
 
