@@ -11,7 +11,7 @@ with open('README.md') as fh:
 
 setup(
     name='ey',
-    version='0.2.0',
+    version='0.3.0',
     description='Simple and easy-to-use library for executing shell commands saving data to the file system without re-executing already executed tasks.',
     long_description=long_description,
     long_description_content_type='text/markdown',
