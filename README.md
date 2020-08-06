@@ -1,5 +1,8 @@
 # Ey
 
+[![CircleCI](https://circleci.com/gh/samuell/ey.svg?style=shield)](https://app.circleci.com/pipelines/github/samuell/ey)
+[![PyPI](https://img.shields.io/pypi/v/ey.svg?style=flat)](https://pypi.org/project/ey)
+
 A super-simple library for performing stepwise batch tasks that saves things to
 files, such that outputs from already finished tasks are not needlessly
 re-computed.
