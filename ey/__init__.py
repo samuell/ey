@@ -7,11 +7,14 @@ import shutil
 def shell(command, **kwargs):
     inputs = {}
     outputs = {}
+    options = {}
     if 'inputs' in kwargs:
         inputs = kwargs['inputs']
     if 'outputs' in kwargs:
         outputs = kwargs['outputs']
-    task = ShellTask(command, inputs, outputs)
+    if 'options' in kwargs:
+        options = kwargs['options']
+    task = ShellTask(command, inputs, outputs, options)
     task.execute()
     return task
 
@@ -19,11 +22,14 @@ def shell(command, **kwargs):
 def func(func, **kwargs):
     inputs = {}
     outputs = {}
+    options = {}
     if 'inputs' in kwargs:
         inputs = kwargs['inputs']
     if 'outputs' in kwargs:
         outputs = kwargs['outputs']
-    task = FuncTask(func, inputs, outputs)
+    if 'options' in kwargs:
+        options = kwargs['options']
+    task = FuncTask(func, inputs, outputs, options)
     task.execute()
     return task
 
@@ -50,34 +56,42 @@ class Task:
 
 
 class FuncTask(Task):
-    def __init__(self, func, inputs={}, outputs={}):
+    def __init__(self, func, inputs={}, outputs={}, options={}):
         self.inputs = inputs
         self.outputs = outputs
         self.func = func
+        self.tempfiles = True
+        if 'tempfiles' in options:
+            self.tempfiles = options['tempfiles']
 
     def execute(self):
         if self._outputs_exist():
             return
 
-        # Make paths into temp paths
-        for name, path in self.outputs.items():
-            self.outputs[name] = path + '.tmp'
+        if self.tempfiles:
+            # Make paths into temp paths
+            for name, path in self.outputs.items():
+                self.outputs[name] = path + '.tmp'
 
         print('Executing python function, producing output(s): %s' % ', '.join(self.outputs.values()))
         self.func(self)
 
-        # Make paths into normal paths again
-        for name, path in self.outputs.items():
-            self.outputs[name] = path[:-4]
+        if self.tempfiles:
+            # Make paths into normal paths again
+            for name, path in self.outputs.items():
+                self.outputs[name] = path[:-4]
 
-        self._move_tempfiles_to_final_path()
+            self._move_tempfiles_to_final_path()
 
 
 class ShellTask(Task):
-    def __init__(self, command, inputs={}, outputs={}):
+    def __init__(self, command, inputs={}, outputs={}, options={}):
         self.inputs = inputs
         self.outputs = outputs
         self.command, self.temp_command = self._replace_ports(command)
+        self.tempfiles = True
+        if 'tempfiles' in options:
+            self.tempfiles = options['tempfiles']
 
     # ------------------------------------------------
     # Public methods
@@ -88,14 +102,18 @@ class ShellTask(Task):
 
         out = self._execute_shell_command(self.command, self.temp_command)
         self._add_cmd_results(out)
-        self._move_tempfiles_to_final_path()
+        if self.tempfiles:
+            self._move_tempfiles_to_final_path()
 
     # ------------------------------------------------
     # Internal methods
     # ------------------------------------------------
     def _execute_shell_command(self, command, temp_command):
         print('Executing command: %s' % command, temp_command)
-        out = sp.run(temp_command, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, check=True, shell=True)
+        cmd = command
+        if self.tempfiles:
+            cmd = temp_command
+        out = sp.run(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, check=True, shell=True)
         return out
 
     def _add_cmd_results(self, cmdout):
