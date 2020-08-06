@@ -93,7 +93,6 @@ def count_gcfrac(task):
             for c in l:
                 if c in ['A', 'T']:
                     at += 1
-adding a new extension
                 elif c in ['G', 'C']:
                     gc += 1
     with open(task.outputs['gcfrac'], 'w') as countfile:
@@ -104,8 +103,8 @@ ct = ey.func(count_gcfrac,
         outputs={'gcfrac': 'gcfrac.txt'})
 ```
 
-Add this code to a file named `download_fasta.py` and run it with:
+Add this code to a file named `gcfrac.py` and run it with:
 
 ```bash
-python download_fasta.py
+python gcfrac.py
 ```
