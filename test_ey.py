@@ -3,7 +3,7 @@ import os.path
 from pytest import fail
 
 def test_replace_ports():
-    task = ey.Task()
+    task = ey.ShellTask()
     for input, expected in [
             (
                 'wget -O [o:fasta:chrmt.fa]',
