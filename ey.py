@@ -1,5 +1,6 @@
 import subprocess as sp
 import re
+import os
 
 def shell(cmd):
     task = ShellTask()
@@ -13,6 +14,11 @@ class Task:
 
 
 class ShellTask(Task):
+    def __init__(self):
+        self.outputs = {}
+        self.inputs = {}
+        self.command = ''
+
     # ------------------------------------------------
     # Public methods
     # ------------------------------------------------
@@ -20,6 +26,11 @@ class ShellTask(Task):
         return 'untitled.txt'
 
     def execute(self):
+        for name, path in self.outputs.items():
+            if os.path.exists(path):
+                print('File or folder already exists, so skipping: %s' % path)
+                return
+
         out = sp.run(self.command, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, check=True, shell=True)
         self._add_cmd_results(out)
 
@@ -36,7 +47,14 @@ class ShellTask(Task):
         self.stderr = cmdout.stderr
 
     def _replace_ports(self, cmd):
-        ms = re.findall(r'(\[o\:([a-z]*):([a-z\.]*)\])', cmd, flags=re.S)
+        # Out ports
+        ms = re.findall(r'(\[o\:([a-z]*):([a-z\.]+)\])', cmd, flags=re.S)
         for m in ms:
-            cmd = cmd.replace(m[0], m[2])
+            placeholder = m[0]
+            portname = m[1]
+            pathpattern = m[2]
+
+            self.outputs[portname] = pathpattern
+            cmd = cmd.replace(placeholder, pathpattern)
+
         return cmd
