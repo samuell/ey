@@ -7,8 +7,9 @@ def shell(cmd):
     return TaskInfo()
 
 def __replace_ports(cmd):
-    ms = re.findall(r'\[o\:([a-z]*):([a-z]*)\]', cmd, flags=re.S)
-    import pdb; pdb.set_trace()
+    ms = re.findall(r'(\[o\:([a-z]*):([a-z\.]*)\])', cmd, flags=re.S)
+    for m in ms:
+        cmd = cmd.replace(m[0], m[2])
     return cmd
 
 class TaskInfo:

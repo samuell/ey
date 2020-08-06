@@ -1,7 +1,19 @@
 import ey
+from pytest import fail
 
-def test_ey():
-    fasta = ey.shell('wget -O [o:fasta:chry.fa] ftp://ftp.ensembl.org/pub/release-67/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.67.dna_rm.chromosome.Y.fa.gz')
-    with open(fasta.out('fasta')) as fafile:
-        for line in fafile:
-            print(line)
+def test_replace_ports():
+    for input, expected in [
+            (
+                'wget -O [o:fasta:chry.fa]',
+                'wget -O chry.fa'
+            )
+        ]:
+        output = ey.__replace_ports(input)
+        if output != expected:
+            fail('output not as expected')
+
+#def test_ey():
+#    fasta = ey.shell(cmd)
+#    with open(fasta.out('fasta')) as fafile:
+#        for line in fafile:
+#            print(line)
