@@ -1,6 +1,9 @@
-import ey
 import os.path
 from pytest import fail
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import ey
 
 def test_replace_ports():
     task = ey.ShellTask('', inputs={'gz': 'chrmt.fa.gz'})
