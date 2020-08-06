@@ -1,6 +1,7 @@
-import os.path
+import os
 from pytest import fail
 import sys
+import shutil
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import ey
@@ -36,7 +37,23 @@ def test_replace_ports():
                 actual=temp_cmd
             ))
 
-def test_ey():
-    gz = ey.shell('wget -O [o:gz:chrmt.fa.gz] ftp://ftp.ensembl.org/pub/release-100/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.MT.fa.gz')
-    if not os.path.isfile('chrmt.fa.gz'):
+
+def test_ey_shell():
+    ey.shell('wget -O [o:gz:/tmp/chrmt.fa.gz] ftp://ftp.ensembl.org/pub/release-100/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.MT.fa.gz')
+    if not os.path.isfile('/tmp/chrmt.fa.gz'):
         fail('download did not succeed')
+
+    os.remove('/tmp/chrmt.fa.gz')
+
+
+def test_ey_func():
+    def write_file(task):
+        with open(task.outputs['out'], 'w') as outfile:
+            outfile.write('test-output\n')
+
+    ey.func(write_file, outputs={'out': '/tmp/output.txt'})
+
+    if not os.path.isfile('/tmp/output.txt'):
+        fail('writing of file in ey.func() did not succeed')
+
+    os.remove('/tmp/output.txt')

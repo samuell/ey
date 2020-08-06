@@ -3,48 +3,101 @@ import re
 import os
 import shutil
 
-def shell(command, inputs={}):
-    task = ShellTask(command, inputs)
+
+def shell(command, **kwargs):
+    inputs = {}
+    outputs = {}
+    if 'inputs' in kwargs:
+        inputs = kwargs['inputs']
+    if 'outputs' in kwargs:
+        outputs = kwargs['outputs']
+    task = ShellTask(command, inputs, outputs)
+    task.execute()
+    return task
+
+
+def func(func, **kwargs):
+    inputs = {}
+    outputs = {}
+    if 'inputs' in kwargs:
+        inputs = kwargs['inputs']
+    if 'outputs' in kwargs:
+        outputs = kwargs['outputs']
+    task = FuncTask(func, inputs, outputs)
     task.execute()
     return task
 
 
 class Task:
-    pass
+    '''
+    Super-class for tasks.
+    '''
+    def execute(self):
+        raise NotImplementedError('execute method not implemented')
+
+    def _outputs_exist(self):
+        for name, path in self.outputs.items():
+            if os.path.exists(path + '.tmp'):
+                raise Exception('Existing temp files found: %s.tmp' % path)
+            if os.path.exists(path):
+                print('File or folder already exists, so skipping task: %s (%s)' % (path, name))
+                return True
+        return False
+
+    def _move_tempfiles_to_final_path(self):
+        for _, path in self.outputs.items():
+            shutil.move('%s.tmp' % path, path)
+
+
+class FuncTask(Task):
+    def __init__(self, func, inputs={}, outputs={}):
+        self.inputs = inputs
+        self.outputs = outputs
+        self.func = func
+
+    def execute(self):
+        if self._outputs_exist():
+            return
+
+        # Make paths into temp paths
+        for name, path in self.outputs.items():
+            self.outputs[name] = path + '.tmp'
+
+        print('Executing python function, producing output(s): %s' % ', '.join(self.outputs.values()))
+        self.func(self)
+
+        # Make paths into normal paths again
+        for name, path in self.outputs.items():
+            self.outputs[name] = path[:-4]
+
+        self._move_tempfiles_to_final_path()
 
 
 class ShellTask(Task):
-    def __init__(self, command, inputs={}):
-        self.inputs = {}
-        self.outputs = {}
-        for name, path in inputs.items():
-            self.inputs[name] = path
+    def __init__(self, command, inputs={}, outputs={}):
+        self.inputs = inputs
+        self.outputs = outputs
         self.command, self.temp_command = self._replace_ports(command)
 
     # ------------------------------------------------
     # Public methods
     # ------------------------------------------------
-    def out(self, portname):
-        return 'untitled.txt'
-
     def execute(self):
-        for name, path in self.outputs.items():
-            if os.path.exists(path):
-                print('File or folder already exists, so skipping: %s' % path)
-                return
+        if self._outputs_exist():
+            return
 
-        print('Executing command: %s' % self.command)
-        out = sp.run(self.temp_command, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, check=True, shell=True)
-
-        # Move paths from temp to final paths
-        for _, path in self.outputs.items():
-            shutil.move('%s.tmp' % path, path)
-
+        out = self._execute_shell_command(self.command, self.temp_command)
         self._add_cmd_results(out)
+        self._move_tempfiles_to_final_path()
 
     # ------------------------------------------------
     # Internal methods
     # ------------------------------------------------
+    def _execute_shell_command(self, command, temp_command):
+        print('Executing command: %s' % command, temp_command)
+        out = sp.run(temp_command, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, check=True, shell=True)
+        return out
+
     def _add_cmd_results(self, cmdout):
         self.args = cmdout.args
         self.returncode = cmdout.returncode
