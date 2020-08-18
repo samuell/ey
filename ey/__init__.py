@@ -120,10 +120,10 @@ class ShellTask(Task):
     # Internal methods
     # ------------------------------------------------
     def _execute_shell_command(self, command, temp_command):
-        print('Executing command: %s' % command)
         cmd = command
         if self.tempfiles:
             cmd = temp_command
+        print('Executing command: %s' % cmd)
         out = sp.run(cmd, stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE, check=True, shell=True)
         return out
 
