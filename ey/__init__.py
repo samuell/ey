@@ -1,7 +1,7 @@
 import subprocess as sp
 import re
-import os
 import shutil
+import os
 import os.path
 
 
@@ -51,6 +51,12 @@ class Task:
                 return True
         return False
 
+    def _ensure_output_folders_exist(self):
+        for _, path in self.outputs.items():
+            parent_dir = os.path.dirname(path)
+            if not os.path.exists(parent_dir):
+                os.makedirs(parent_dir, exist_ok = True)
+
     def _move_tempfiles_to_final_path(self):
         for _, path in self.outputs.items():
             shutil.move('%s.tmp' % path, path)
@@ -68,6 +74,8 @@ class FuncTask(Task):
     def execute(self):
         if self._outputs_exist():
             return
+
+        self._ensure_output_folders_exist()
 
         if self.tempfiles:
             # Make paths into temp paths
@@ -100,6 +108,8 @@ class ShellTask(Task):
     def execute(self):
         if self._outputs_exist():
             return
+
+        self._ensure_output_folders_exist()
 
         out = self._execute_shell_command(self.command, self.temp_command)
         self._add_cmd_results(out)
