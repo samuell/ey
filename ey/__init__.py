@@ -2,6 +2,7 @@ import subprocess as sp
 import re
 import os
 import shutil
+import os.path
 
 
 def shell(command, **kwargs):
@@ -124,15 +125,23 @@ class ShellTask(Task):
 
     def _replace_ports(self, command):
         # In-ports
-        ms = re.findall(r'(\[i\:([^:\]\|]*)(\|%([^\]]+))?\])', command, flags=re.S)
+        ms = re.findall(r'(\[i\:([^:\]\|]*)(\|([^\]]+))?\])', command, flags=re.S)
         for m in ms:
             placeholder = m[0]
             portname = m[1]
             path = self.inputs[portname]
 
             if m[3] != '':
-                end_to_trim = m[3]
-                path = path.replace(end_to_trim, '')
+                modifiers = m[3]
+                mods = modifiers.strip('|').split('|')
+                for mod in mods:
+                    # Replace extensions specified with |%.ext modifier
+                    if mod[0] == '%':
+                        extlen = len(mod[1:])
+                        path = path[0:-extlen]
+                    # Take basename of path, if |basename modifier is found
+                    if mod == 'basename':
+                        path = os.path.basename(path)
 
             command = command.replace(placeholder, path)
 

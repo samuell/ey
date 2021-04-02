@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 import ey
 
 def test_replace_ports():
-    task = ey.ShellTask('', inputs={'gz': 'chrmt.fa.gz'})
+    task = ey.ShellTask('', inputs={'gz': 'data/chrmt.fa.gz'})
     for cmdpattern, expected_cmd, expected_temp_cmd in [
             (
                 'wget -O [o:fasta:chrmt.fa]',
@@ -16,13 +16,23 @@ def test_replace_ports():
             ),
             (
                 'wget -O [o:fasta:[i:gz]]',
-                'wget -O chrmt.fa.gz',
-                'wget -O chrmt.fa.gz.tmp'
+                'wget -O data/chrmt.fa.gz',
+                'wget -O data/chrmt.fa.gz.tmp'
             ),
             (
                 'zcat [i:gz] > [o:fasta:[i:gz|%.gz]]',
-                'zcat chrmt.fa.gz > chrmt.fa',
-                'zcat chrmt.fa.gz > chrmt.fa.tmp'
+                'zcat data/chrmt.fa.gz > data/chrmt.fa',
+                'zcat data/chrmt.fa.gz > data/chrmt.fa.tmp'
+            ),
+            (
+                'zcat [i:gz] > [o:fasta:[i:gz|basename|%.gz]]',
+                'zcat data/chrmt.fa.gz > chrmt.fa',
+                'zcat data/chrmt.fa.gz > chrmt.fa.tmp'
+            ),
+            (
+                'zcat [i:gz] > [o:fasta:[i:gz|%.gz|basename]]',
+                'zcat data/chrmt.fa.gz > chrmt.fa',
+                'zcat data/chrmt.fa.gz > chrmt.fa.tmp'
             )
         ]:
         cmd, temp_cmd = task._replace_ports(cmdpattern)

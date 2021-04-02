@@ -60,6 +60,8 @@ So, for example, if you want to name your output the same as the input, but
 with an extra `.txt` extension, you can specify it like this in the command:
 `somecommand > [o:myoutput:[i:myinput].txt]`.
 
+### Removing file extensions
+
 If you have an existing extension in the input that you want to remove, you can
 do it by adding `|%.actual-extension-here` in the input placeholder. So, if you
 have an input `myinput` with the path `myfile.txt.gz`, you can reuse just the
@@ -68,7 +70,21 @@ Putting that inside an output placeholder, you could for example do: `zcat
 [i:archivefile] > [o:unpacked:[i:archivefile|%.gz]]`, in order to name the
 unpacked file the same as the archive, but without the `.gz` extension.
 
-See the example below for how to use this in practice!
+### Removing parent directories from paths
+
+Often it is the case that the input path contains a long folder path that you
+don't want to re-use when re-using the input filename. To clean the path from
+the parent directory structure, you can add the `|basename` modifier inside any
+path placeholder.  So, if you have an input `myinput` with the path
+`some/directory/structure/file.txt.gz`, you can reuse just the `myfile.txt` part
+by writing `[i:myinput|basename]`, to remove the `some/directory/structure`
+part. Modifiers can be compbined, so for example, given that you have an archive
+file in another directory named `some/directory/structure`, you could do
+the following to extract the archive, removing the `.gz` file extension and
+putting the extracted file in a new directory named `other-directory`:
+`zcat [i:archivefile] > other-directory/[o:unpacked:[i:archivefile|basename|%.gz]]`
+
+See the example below for how to use some of this in practice!
 
 ## Example
 
