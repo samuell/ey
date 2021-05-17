@@ -54,7 +54,7 @@ class Task:
     def _ensure_output_folders_exist(self):
         for _, path in self.outputs.items():
             parent_dir = os.path.dirname(path)
-            if not os.path.exists(parent_dir):
+            if parent_dir and not os.path.exists(parent_dir):
                 os.makedirs(parent_dir, exist_ok = True)
 
     def _move_tempfiles_to_final_path(self):
